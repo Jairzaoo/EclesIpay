@@ -1,0 +1,69 @@
+{% load static %}
+{% load bible_tags %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EclesIPay - Gestão de Dízimos</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-church"></i> EclesIPay</h1>
+            <p>Sistema de Gestão de Dízimos Paroquial</p>
+        </div>
+        
+        <div class="content">
+            {% if request.path == '/login/' or request.path == '/' %}
+               
+                <div class="auth-box">
+                    <h2><i class="fas fa-user-circle"></i> Acesso Restrito</h2>
+                    
+                    {% if form.errors %}
+                    <div class="alert error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        E-mail ou senha incorretos. Tente novamente.
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input type="email" name="username" placeholder="E-mail" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" name="password" placeholder="Senha" required>
+                        </div>
+                        <button type="submit">Entrar</button>
+                    </form>
+                    
+                    <a href="{% url 'registro' %}" class="btn-register">
+                        <i class="fas fa-user-plus"></i> Não possui cadastro? Registre-se agora
+                    </a>
+                </div>
+            {% else %}
+                <!-- Other pages use block content -->
+                {% block content %}{% endblock %}
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p id="verse-text" style="font-weight: bold; font-size: 16px;">{% versiculo_aleatorio %}</p>
+        </div>
+    </div>
+
+    <script src="{% static 'js/script.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const verseText = document.getElementById('verse-text').innerText;
+            console.log('Bible verse displayed:', verseText);
+            if (verseText.includes('2 Coríntios 9:7')) {
+                console.log('Warning: Using fallback verse. API request might have failed.');
+            }
+        });
+    </script>
+</body>
+</html>

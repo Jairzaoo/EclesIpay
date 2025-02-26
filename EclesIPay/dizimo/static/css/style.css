@@ -1,0 +1,310 @@
+:root {
+    --primary-color: #4B0082;    /* Roxo litúrgico */
+    --secondary-color: #D4AF37;  /* Dourado */
+    --light-color: #F8F8FF;      /* Branco fantasma */
+    --dark-color: #2F4F4F;       /* Dark Slate Gray */
+}
+
+body {
+    background: linear-gradient(45deg, var(--primary-color), var(--dark-color));
+    font-family: 'Merriweather', serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 500px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: url('../images/cross-bg.png') repeat;
+    opacity: 0.1;
+    z-index: 0;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.header h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.header i {
+    color: var(--secondary-color);
+    margin-right: 10px;
+}
+
+form {
+    position: relative;
+    z-index: 1;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--primary-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+button {
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+.footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-weight: bold;
+    font-size: 16px;
+    /*color: var(--dark-color);*/
+}
+
+/* Add specific styling for the verse text */
+.footer p, 
+#verse-text {
+    font-weight: bold !important;
+    font-size: 16px !important;
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.content {
+    animation: fadeIn 0.6s ease-out;
+}
+/* static/css/style.css */
+.btn-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--secondary-color);
+    color: white !important;
+    border-radius: 5px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+.btn-link:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+/* Estilo para mensagens de erro */
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.alert.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.alert i {
+    margin-right: 10px;
+}
+
+/* Estilo específico para o botão de registro */
+.btn-register {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    background: var(--secondary-color);
+    color: white !important;
+    border-radius: 1.5rem;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 100;  /* increased z-index */
+    text-decoration: none !important;
+    pointer-events: auto;
+}
+
+.btn-register:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Garantir que o cursor apareça nos links */
+.alert.info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+.email-confirmation {
+    text-align: center;
+    padding: 2rem;
+}
+
+.email-confirmation .icon {
+    font-size: 4rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+.alert.info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 20px 0;
+}
+
+.alert.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 20px 0;
+}
+
+.text-success {
+    color: #2e7d32 !important;
+}
+
+/* Clean implementation of registration button */
+.register-link {
+    margin-top: 20px;
+    text-align: center;
+    position: relative;
+    z-index: 100;
+}
+
+.registration-button {
+    display: inline-block;
+    width: auto;
+    padding: 12px 20px;
+    background: var(--secondary-color);
+    color: white !important;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none !important;
+    font-weight: bold;
+}
+
+.registration-button:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* New registration button styles */
+.signup-container {
+    margin-top: 25px;
+    text-align: center;
+    position: relative;
+}
+
+#signup-link {
+    display: inline-block;
+    background-color: var(--secondary-color);
+    color: white !important;
+    padding: 12px 20px;
+    border-radius: 5px;
+    text-decoration: none !important;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 999;
+}
+
+#signup-link:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+#signup-link i {
+    margin-right: 6px;
+}
+.alert-content p {
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.support-text {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.support-text p {
+    margin-bottom: 0.5rem;
+}
+
+.support-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.support-link:hover {
+    background-color: #0056b3;
+}

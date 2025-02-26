@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-box">
+    <h2><i class="fas fa-envelope"></i> Confirmação de Email Enviada</h2>
+    <div class="alert info">
+        <i class="fas fa-info-circle"></i>
+        <div class="alert-content">
+            <p>Enviamos um email de confirmação para <strong>{{ user.email }}</strong>.</p>
+            <p>Por favor, verifique sua caixa de entrada e siga as instruções para ativar sua conta.</p>
+        </div>
+    </div>
+    <div class="support-text">
+        <p>Não recebeu o email?</p>
+        <a href="mailto:eclesipay@gmail.com" class="support-link">Contate nosso suporte</a>
+    </div>
+</div>
+{% endblock %}

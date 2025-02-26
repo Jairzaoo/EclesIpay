@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-box">
+    <h2><i class="fas fa-check-circle text-success"></i> Email Confirmado!</h2>
+    <div class="alert success">
+        <i class="fas fa-thumbs-up"></i>
+        <p>Sua conta foi ativada com sucesso!</p>
+    </div>
+    <a href="{% url 'home' %}" class="btn-register">
+        <i class="fas fa-home"></i> Ir para a Página Inicial
+    </a>
+</div>
+{% endblock %}
