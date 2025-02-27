@@ -2,46 +2,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Home</title>
+    <title>EclesIPay - Minha Conta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script defer src="{% static 'js/script.js' %}"></script>
 </head>
-<body>
-    <h1>Bem-vindo, {{ request.user.nome }}!</h1>
-    
-    <div class="user-info">
-        <h2>Seus dados:</h2>
-        <ul>
-            <li><strong>Email:</strong> {{ request.user.email }}</li>
-            <li><strong>Data de Nascimento:</strong> {{ request.user.data_nascimento|date:"d/m/Y" }}</li>
-            <li><strong>Telefone:</strong> {{ request.user.telefone }}</li>
-            <li>
-                <strong>Paróquia:</strong>
-                <span id="paroquiaAtual">
-                    {% if request.user.paroquia %}
-                        {{ request.user.paroquia.nome }}
-                    {% else %}
-                        Nenhuma paróquia selecionada
-                    {% endif %}
-                </span>
-                <button type="button" id="mudarParoquia">Mudar</button>
-                <div id="paroquiaDropdown" style="display:none; margin-top: 10px;">
-                    <select id="paroquiaSelect" name="paroquia">
-                        {% for paroquia in paroquias %}
-                            <option value="{{ paroquia.id }}" 
-                                {% if request.user.paroquia.id == paroquia.id %}selected{% endif %}>
-                                {{ paroquia.nome }}
-                            </option>
-                        {% empty %}
-                            <option disabled>Nenhuma paróquia cadastrada</option>
-                        {% endfor %}
-                    </select>
-                    <button type="button" id="salvarParoquia">Salvar</button>
-                    <button type="button" id="cancelarParoquia">Cancelar</button>
+<body class="home-page">
+    <div class="home-container">
+        <header class="home-header">
+            <div class="logo-area">
+                <i class="fas fa-church"></i>
+                <h1>EclesIPay</h1>
+            </div>
+            <div class="user-welcome">
+                Bem-vindo, <span class="user-name">{{ request.user.nome }}</span>!
+            </div>
+        </header>
+
+        <main class="home-content">
+            <section class="user-card">
+                <div class="card-header">
+                    <i class="fas fa-user-circle"></i>
+                    <h2>Meus Dados</h2>
                 </div>
-            </li>
-        </ul>
+                <div class="card-body">
+                    <div class="info-item">
+                        <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                        <div class="info-content">
+                            <div class="info-label">Email</div>
+                            <div class="info-value">{{ request.user.email }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="info-content">
+                            <div class="info-label">Data de Nascimento</div>
+                            <div class="info-value">{{ request.user.data_nascimento|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <div class="info-icon"><i class="fas fa-phone"></i></div>
+                        <div class="info-content">
+                            <div class="info-label">Telefone</div>
+                            <div class="info-value">{{ request.user.telefone }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item paroquia-info">
+                        <div class="info-icon"><i class="fas fa-place-of-worship"></i></div>
+                        <div class="info-content">
+                            <div class="info-label">Paróquia</div>
+                            <div class="info-value">
+                                <span id="paroquiaAtual">
+                                    {% if request.user.paroquia %}
+                                        {{ request.user.paroquia.nome }}
+                                    {% else %}
+                                        Nenhuma paróquia selecionada
+                                    {% endif %}
+                                </span>
+                                <button type="button" id="mudarParoquia" class="btn-change">
+                                    <i class="fas fa-edit"></i> Mudar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="paroquiaDropdown" class="dropdown-panel">
+                        <div class="dropdown-header">
+                            <h3>Selecionar Paróquia</h3>
+                        </div>
+                        <div class="dropdown-body">
+                            <select id="paroquiaSelect" name="paroquia">
+                                {% for paroquia in paroquias %}
+                                    <option value="{{ paroquia.id }}" 
+                                        {% if request.user.paroquia.id == paroquia.id %}selected{% endif %}>
+                                        {{ paroquia.nome }}
+                                    </option>
+                                {% empty %}
+                                    <option disabled>Nenhuma paróquia cadastrada</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="dropdown-footer">
+                            <button type="button" id="salvarParoquia" class="btn-save">
+                                <i class="fas fa-check"></i> Salvar
+                            </button>
+                            <button type="button" id="cancelarParoquia" class="btn-cancel">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="actions-card">
+                <div class="card-header">
+                    <i class="fas fa-cog"></i>
+                    <h2>Ações</h2>
+                </div>
+                <div class="card-body">
+                    <a href="#" class="action-button">
+                        <i class="fas fa-donate"></i> Fazer uma Oferta
+                    </a>
+                    <a href="#" class="action-button">
+                        <i class="fas fa-history"></i> Histórico de Contribuições
+                    </a>
+                    <a href="#" class="action-button">
+                        <i class="fas fa-user-edit"></i> Editar Perfil
+                    </a>
+                    <a href="{% url 'logout' %}" class="action-button logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </a>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="home-footer">
+            <p><i class="fas fa-cross"></i> EclesIPay &copy; {% now "Y" %} - Facilitando as contribuições à Igreja</p>
+        </footer>
     </div>
-    <a href="{% url 'logout' %}" class="logout-btn">Sair</a>
+    
+    <!-- Notification area -->
+    <div id="notification-area"></div>
 </body>
 </html>
