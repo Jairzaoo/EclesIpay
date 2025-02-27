@@ -8,7 +8,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.contrib.auth.tokens import default_token_generator
-
+from .models import Paroquia
 
 
 
@@ -31,9 +31,13 @@ def registro(request):
     else:
         form = RegistroForm()
     return render(request, 'registro.html', {'form': form})
+
 @login_required
 def home(request):
-    return render(request, 'home.html')
+    paroquias = Paroquia.objects.all()
+    return render(request, 'home.html', {'paroquias': paroquias})
+
+
 
 def confirmar_email(request, uidb64, token):
     try:

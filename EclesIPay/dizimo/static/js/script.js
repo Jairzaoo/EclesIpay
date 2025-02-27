@@ -39,4 +39,71 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(msg);
         setTimeout(() => msg.remove(), 3000);
     }
+    
+    // Funcionalidade para mudar paróquia
+    const mudarParoquiaBtn = document.getElementById('mudarParoquia');
+    const salvarParoquiaBtn = document.getElementById('salvarParoquia');
+    const cancelarParoquiaBtn = document.getElementById('cancelarParoquia');
+    const paroquiaDropdown = document.getElementById('paroquiaDropdown');
+    
+    if (mudarParoquiaBtn) {
+        mudarParoquiaBtn.addEventListener('click', function() {
+            paroquiaDropdown.style.display = 'block';
+            mudarParoquiaBtn.style.display = 'none';
+        });
+    }
+    
+    if (cancelarParoquiaBtn) {
+        cancelarParoquiaBtn.addEventListener('click', function() {
+            paroquiaDropdown.style.display = 'none';
+            mudarParoquiaBtn.style.display = 'inline-block';
+        });
+    }
+    
+    if (salvarParoquiaBtn) {
+        salvarParoquiaBtn.addEventListener('click', function() {
+            const paroquiaSelect = document.getElementById('paroquiaSelect');
+            const paroquiaId = paroquiaSelect.value;
+            const paroquiaText = paroquiaSelect.options[paroquiaSelect.selectedIndex].text;
+            
+            // Enviar a alteração para o servidor via AJAX
+            fetch('/atualizar-paroquia/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ paroquia_id: paroquiaId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Erro ao atualizar paróquia');
+            })
+            .then(data => {
+                // Atualizar a interface do usuário
+                document.getElementById('paroquiaAtual').textContent = paroquiaText;
+                paroquiaDropdown.style.display = 'none';
+                mudarParoquiaBtn.style.display = 'inline-block';
+                showMessage('Paróquia atualizada com sucesso!', 'success');
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showMessage('Erro ao atualizar paróquia. Tente novamente.', 'error');
+            });
+        });
+    }
+    
+    // Função auxiliar para obter o token CSRF
+    function getCsrfToken() {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith('csrftoken=')) {
+                return cookie.substring('csrftoken='.length, cookie.length);
+            }
+        }
+        return null;
+    }
 });

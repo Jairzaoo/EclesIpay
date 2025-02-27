@@ -9,6 +9,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 
+
 class Paroquia(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     data_criacao = models.DateTimeField(default=timezone.now)  # Mantenha esta linha

@@ -3,9 +3,45 @@
 <html>
 <head>
     <title>Home</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script defer src="{% static 'js/script.js' %}"></script>
 </head>
 <body>
     <h1>Bem-vindo, {{ request.user.nome }}!</h1>
-    <a href="{% url 'logout' %}">Sair</a>
+    
+    <div class="user-info">
+        <h2>Seus dados:</h2>
+        <ul>
+            <li><strong>Email:</strong> {{ request.user.email }}</li>
+            <li><strong>Data de Nascimento:</strong> {{ request.user.data_nascimento|date:"d/m/Y" }}</li>
+            <li><strong>Telefone:</strong> {{ request.user.telefone }}</li>
+            <li>
+                <strong>Paróquia:</strong>
+                <span id="paroquiaAtual">
+                    {% if request.user.paroquia %}
+                        {{ request.user.paroquia.nome }}
+                    {% else %}
+                        Nenhuma paróquia selecionada
+                    {% endif %}
+                </span>
+                <button type="button" id="mudarParoquia">Mudar</button>
+                <div id="paroquiaDropdown" style="display:none; margin-top: 10px;">
+                    <select id="paroquiaSelect" name="paroquia">
+                        {% for paroquia in paroquias %}
+                            <option value="{{ paroquia.id }}" 
+                                {% if request.user.paroquia.id == paroquia.id %}selected{% endif %}>
+                                {{ paroquia.nome }}
+                            </option>
+                        {% empty %}
+                            <option disabled>Nenhuma paróquia cadastrada</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" id="salvarParoquia">Salvar</button>
+                    <button type="button" id="cancelarParoquia">Cancelar</button>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <a href="{% url 'logout' %}" class="logout-btn">Sair</a>
 </body>
 </html>
