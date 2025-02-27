@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-79qd!mw4^u@6$=n)pzl%2p!t7t4t*9)i8rz2u#o91ak_$ysrx$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'eclesipay.run.place']
 
 LOGIN_REDIRECT_URL = 'home'
 # Application definition
