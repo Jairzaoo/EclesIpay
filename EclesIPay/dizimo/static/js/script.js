@@ -1,4 +1,52 @@
 document.addEventListener('DOMContentLoaded', function() {
+
+
+    document.getElementById('salvarParoquia').addEventListener('click', async () => {
+        const select = document.getElementById('paroquiaSelect');
+        const selectedParoquia = select.options[select.selectedIndex];
+        
+        try {
+            const response = await fetch('/atualizar-paroquia/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    paroquia_id: select.value
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                document.getElementById('paroquiaAtual').textContent = selectedParoquia.text;
+                dropdown.style.display = 'none';
+            } else {
+                alert('Erro ao atualizar paróquia: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro na comunicação com o servidor');
+        }
+    });
+
+    // Função para pegar o cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     // Add direct handler for the signup link
     const signupLink = document.getElementById('signup-link');
     if (signupLink) {

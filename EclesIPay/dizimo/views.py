@@ -6,11 +6,12 @@ from .forms import RegistroForm
 from django.contrib.auth.decorators import login_required
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.tokens import default_token_generator
 from .models import Paroquia
-
-
+import json
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 User = get_user_model()
 
@@ -54,4 +55,29 @@ def confirmar_email(request, uidb64, token):
         return redirect('email_confirmed')
     else:
         return HttpResponse('Link de confirmação inválido ou expirado!')
-    
+
+@csrf_exempt
+@require_POST
+def atualizar_paroquia(request):
+    if request.user.is_authenticated:
+        try:
+            data = json.loads(request.body)
+            paroquia_id = data.get('paroquia_id')
+            
+            if not paroquia_id:
+                return JsonResponse({'status': 'error', 'message': 'ID da paróquia não fornecido'})
+            
+            paroquia = Paroquia.objects.get(id=paroquia_id)
+            request.user.paroquia = paroquia
+            request.user.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'paroquia_nome': paroquia.nome
+            })
+            
+        except Paroquia.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Paróquia não encontrada'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Usuário não autenticado'})

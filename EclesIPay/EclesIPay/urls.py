@@ -13,4 +13,5 @@ urlpatterns = [
     path('confirmar-email/<uidb64>/<token>/', views.confirmar_email, name='confirmar_email'),
     path('email-confirmacao-enviado/', TemplateView.as_view(template_name='email_confirmation_sent.html'), name='email_confirmation_sent'),
     path('email-confirmado/', TemplateView.as_view(template_name='email_confirmed.html'), name='email_confirmed'),
+    path('atualizar-paroquia/', views.atualizar_paroquia, name='atualizar_paroquia'),
 ]
