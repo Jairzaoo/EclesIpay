@@ -21,13 +21,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.status === 'success') {
                 document.getElementById('paroquiaAtual').textContent = selectedParoquia.text;
-                dropdown.style.display = 'none';
+                //dropdown.style.display = 'none';
             } else {
                 alert('Erro ao atualizar paróquia: ' + data.message);
             }
         } catch (error) {
-            console.error('Erro:', error);
-            alert('Erro na comunicação com o servidor');
+            //console.error('Erro:', error);
+            //alert('Erro na comunicação com o servidor');
+            console.log(error)
         }
     });
 
