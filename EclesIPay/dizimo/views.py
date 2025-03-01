@@ -46,7 +46,7 @@ def home(request):
     paroquias = Paroquia.objects.all()
     return render(request, 'home.html', {'paroquias': paroquias})
 
-@login_required
+
 def confirmar_email(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
