@@ -1,7 +1,7 @@
 # dizimo/views.py
 from django.contrib import messages
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from .forms import RegistroForm
 from django.contrib.auth.decorators import login_required
 from django.utils.http import urlsafe_base64_decode
@@ -12,11 +12,21 @@ from .models import Paroquia
 import json
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.views import LoginView
+from django.views import View
 
 User = get_user_model()
 
-def registro(request):
-    if request.method == 'POST':
+class CustomRegistroView(View):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        form = RegistroForm()
+        return render(request, 'registro.html', {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
         form = RegistroForm(request.POST)
         if form.is_valid():
             try:
@@ -29,17 +39,14 @@ def registro(request):
                 messages.error(request, f"Erro ao enviar e-mail de confirmação: {str(e)}")
         else:
             messages.error(request, "Por favor corrija os erros abaixo")
-    else:
-        form = RegistroForm()
-    return render(request, 'registro.html', {'form': form})
+        return render(request, 'registro.html', {'form': form})
 
 @login_required
 def home(request):
     paroquias = Paroquia.objects.all()
     return render(request, 'home.html', {'paroquias': paroquias})
 
-
-
+@login_required
 def confirmar_email(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
@@ -56,8 +63,14 @@ def confirmar_email(request, uidb64, token):
     else:
         return HttpResponse('Link de confirmação inválido ou expirado!')
 
+@login_required
+def user_logout(request):
+    logout(request)
+    return redirect('login')
+
 @csrf_exempt
 @require_POST
+@login_required
 def atualizar_paroquia(request):
     if request.user.is_authenticated:
         try:
@@ -81,3 +94,11 @@ def atualizar_paroquia(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     return JsonResponse({'status': 'error', 'message': 'Usuário não autenticado'})
+
+class CustomLoginView(LoginView):
+    template_name = 'login.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
