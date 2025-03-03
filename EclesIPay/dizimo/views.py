@@ -121,3 +121,108 @@ class CustomLoginView(LoginView):
         if request.user.is_authenticated:
             return redirect('home')
         return super().dispatch(request, *args, **kwargs)
+
+@login_required
+def fazer_oferta(request):
+    if request.method == 'POST':
+        value = request.POST.get('value')
+        payer_name = request.user.nome
+        payer_cpf = request.user.cpf
+        payer_email = request.user.email
+        payer_telefone = request.user.telefone
+        paroquia = request.user.paroquia
+
+        abacatepay_service = AbacatePayService(api_key='abc_dev_H5Dmsa4USJkDLJCFcZafpZfW')
+        payment_response = abacatepay_service.create_payment(
+            amount=int(float(value) * 100),  
+            payer_name=payer_name,
+            payer_cpf=payer_cpf,
+            payer_email=payer_email,
+            payer_telefone=payer_telefone,
+            paroquia_nome=paroquia.nome,
+            paroquia_id=paroquia.id
+        )
+        print(payment_response)
+        if payment_response.get('error') is None and payment_response.get('data'):
+            payment_url = payment_response['data']['url']
+            return redirect(payment_url)
+        else:
+            error_message = payment_response.get('error') or 'Erro desconhecido na API'
+            messages.error(request, f'Erro ao gerar cobrança: {error_message}')
+        
+    return render(request, 'fazer_oferta.html')
+
+@login_required
+def pagamento_efetuado(request):
+    messages.success(request, 'Pagamento realizado com sucesso!')
+    return redirect('fazer_oferta')
+
+@login_required
+def historico_contribuicao(request):
+    try:
+        url = "https://api.abacatepay.com/v1/billing/list"
+        headers = {
+            "accept": "application/json",
+            "authorization": "Bearer abc_dev_H5Dmsa4USJkDLJCFcZafpZfW"
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        contributions = response.json().get('data', [])
+        user_email = request.user.email
+        
+        paid_contributions = []
+        total_amount = 0
+        parishes = defaultdict(lambda: {'total': 0, 'count': 0})
+
+        for contribution in contributions:
+            customer_data = contribution.get('customer', {}).get('metadata', {})
+            
+            if customer_data.get('email') == user_email and contribution.get('status') == 'PAID':
+                amount = contribution.get('amount', 0) / 100
+                created_at = datetime.strptime(
+                    contribution['createdAt'], 
+                    '%Y-%m-%dT%H:%M:%S.%fZ'
+                )
+                parish_id = contribution.get('products', [{}])[0].get('externalId')
+                parish = Paroquia.objects.filter(id=parish_id).first()
+                parish_name = parish.nome if parish else 'Não informada'
+                
+                paid_contributions.append({
+                    'date': created_at,
+                    'amount': amount,
+                    'parish': parish_name,
+                    'methods': ', '.join(contribution.get('methods', [])),
+                    'payment_url': contribution.get('url', ''),
+                    'id': contribution.get('id', '')
+                })
+                
+                total_amount += amount
+                parishes[parish_name]['total'] += amount
+                parishes[parish_name]['count'] += 1
+
+        # Group by month and parish
+        grouped_contributions = defaultdict(lambda: defaultdict(list))
+        for contrib in paid_contributions:
+            month_key = contrib['date'].strftime('%Y-%m')
+            grouped_contributions[month_key][contrib['parish']].append(contrib)
+
+        # Debug prints
+        print("Grouped Contributions:", grouped_contributions)
+        print("Total Contributions:", len(paid_contributions))
+        print("Total Amount:", total_amount)
+        print("Parishes:", parishes)
+
+        return render(request, 'historico_contribuicao.html', {
+            'grouped_contributions': dict(grouped_contributions),
+            'total_contributions': len(paid_contributions),
+            'total_amount': total_amount,
+            'parishes': dict(parishes)
+        })
+
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f'Erro ao conectar com o serviço de pagamentos: {str(e)}')
+    except Exception as e:
+        messages.error(request, f'Erro inesperado: {str(e)}')
+    
+    return redirect('home')
