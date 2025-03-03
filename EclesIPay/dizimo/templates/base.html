@@ -50,6 +50,17 @@
             {% endif %}
         </div>
 
+        <!-- Messages -->
+        {% if messages %}
+            <div id="notification-area">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <div class="footer">
             {% block verse %}
             <p id="verse-text" style="font-weight: bold; font-size: 16px;">{% versiculo_aleatorio %}</p>

@@ -176,9 +176,8 @@ a:hover {
     transition: all 0.3s ease;
     cursor: pointer;
     position: relative;
-    z-index: 100;  /* increased z-index */
-    text-decoration: none !important;
-    pointer-events: auto;
+    z-index: 999;  /* increased z-index */
+    text-decoration: none;
 }
 
 .btn-register:hover {
@@ -873,5 +872,273 @@ h1 {
     .btn-save, .btn-cancel {
         width: 100%;
         justify-content: center;
-    }
+    }    
+}
+.contribution-groups {
+    margin-top: 2rem;
+}
+
+.month-group {
+    margin-bottom: 2.5rem;
+}
+
+.month-group h3 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.contribution-cards {
+    display: grid;
+    gap: 1rem;
+}
+
+.contribution-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.contribution-card.paid {
+    border-left: 4px solid #2ecc71;
+}
+
+.contribution-card.pending {
+    border-left: 4px solid #f1c40f;
+}
+
+.contribution-card.cancelled {
+    border-left: 4px solid #e74c3c;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.amount {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.contribution-card.paid .status-badge {
+    background: #2ecc7050;
+    color: #27ae60;
+}
+
+.contribution-card.pending .status-badge {
+    background: #f1c40f50;
+    color: #f39c12;
+}
+
+.contribution-card.cancelled .status-badge {
+    background: #e74c3c50;
+    color: #c0392b;
+}
+
+.card-details p {
+    margin: 0.5rem 0;
+    color: #7f8c8d;
+}
+
+.card-details i {
+    margin-right: 0.5rem;
+    width: 1.2rem;
+}
+
+.card-actions {
+    margin-top: 1rem;
+    text-align: right;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.contribution-card.paid .btn {
+    background: #27ae60;
+    color: white;
+}
+
+.no-contributions {
+    text-align: center;
+    padding: 2rem;
+    color: #7f8c8d;
+}
+
+.no-contributions i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.status-paid { color: #28a745; }
+.status-pending { color: #ffc107; }
+.status-cancelled { color: #dc3545; }
+    
+.contributions-list h3 {
+    color: #2c3e50;
+    margin-top: 1.5rem;
+}
+    
+.contributions-list ul ul {
+    margin-left: 1rem;
+}
+.parish-summary {
+    margin-bottom: 2rem;
+}
+
+.parish-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.parish-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.parish-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.parish-stats div {
+    text-align: center;
+}
+
+.parish-stats span {
+    display: block;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.parish-stats strong {
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.detailed-history {
+    margin-top: 2rem;
+}
+
+.month-group {
+    margin-bottom: 2rem;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.parish-group {
+    margin-top: 1.5rem;
+}
+
+.parish-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+}
+
+.parish-total {
+    background: #e9ecef;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.contributions-list {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.contribution-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.contribution-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.amount {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.receipt-link {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.receipt-link:hover {
+    text-decoration: underline;
+}
+
+.back-arrow {
+    display: inline-block; 
+    cursor: pointer; 
+    padding: 8px; 
+    text-decoration: none; 
+    position: relative; 
+    z-index: 10;
+    
+}
+
+.back-arrow:hover {
+    color: var(--secondary-color);
+}
+
+
+
+
+
+.header-back .back-arrow {
+    position: relative;
+    z-index: 9999;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.header-back .back-arrow:hover {
+    color: var(--secondary-color);
 }

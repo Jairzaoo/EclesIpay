@@ -104,13 +104,13 @@
                     <h2>Ações</h2>
                 </div>
                 <div class="card-body">
-                    <a href="#" class="action-button">
+                    <a href="{% url 'fazer_oferta' %}" class="action-button">
                         <i class="fas fa-donate"></i> Fazer uma Oferta
                     </a>
-                    <a href="#" class="action-button">
+                    <a href="{% url 'historico_contribuicao' %}" class="action-button">
                         <i class="fas fa-history"></i> Histórico de Contribuições
                     </a>
-                    <a href="#" class="action-button">
+                    <a href="{% url 'editar_perfil' %}" class="action-button">
                         <i class="fas fa-user-edit"></i> Editar Perfil
                     </a>
                     <a href="{% url 'logout' %}" class="action-button logout-btn">
@@ -126,6 +126,14 @@
     </div>
     
     <!-- Notification area -->
-    <div id="notification-area"></div>
+    {% if messages %}
+        <div id="notification-area">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    <i class="fas fa-info-circle"></i> {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 </body>
 </html>

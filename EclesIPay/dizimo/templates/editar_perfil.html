@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="auth-box">
+    <a href="{% url 'home' %}" class="auth-box__back-arrow" style="display: inline-block; cursor: pointer; padding: 8px; text-decoration: none; position: relative; z-index: 10;">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+    <h2><i class="fas fa-user-edit"></i> Editar Perfil</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text">{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit">Salvar</button>
+    </form>
+</div>
+{% endblock %}

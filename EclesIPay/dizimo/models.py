@@ -1,6 +1,6 @@
 # dizimo/models.py
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
@@ -8,72 +8,65 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-
+from django.template.loader import render_to_string
 
 class Paroquia(models.Model):
     nome = models.CharField(max_length=100, unique=True)
-    data_criacao = models.DateTimeField(default=timezone.now)  # Mantenha esta linha
-    
+    data_criacao = models.DateTimeField(default=timezone.now)
+
     def __str__(self):
         return self.nome
 
-class Usuario(AbstractUser):
-    username = None
-    first_name = None
-    last_name = None
-    
+class UsuarioManager(BaseUserManager):
+    def create_user(self, email, nome, data_nascimento, telefone, password=None):
+        if not email:
+            raise ValueError('O usuário deve ter um endereço de email')
+        email = self.normalize_email(email)
+        user = self.model(email=email, nome=nome, data_nascimento=data_nascimento, telefone=telefone)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, nome, data_nascimento, telefone, password=None):
+        user = self.create_user(email, nome, data_nascimento, telefone, password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
+class Usuario(AbstractBaseUser, PermissionsMixin):
     nome = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
     data_nascimento = models.DateField()
     telefone = models.CharField(max_length=20)
-    paroquia = models.ForeignKey(Paroquia, on_delete=models.SET_NULL, null=True)
+    cpf = models.CharField(max_length=11, null=True, blank=True, default=None)  # Now unique but still nullable
+    paroquia = models.ForeignKey(Paroquia, on_delete=models.SET_NULL, null=True, blank=True)
     email_confirmado = models.BooleanField(default=False)
     data_cadastro = models.DateTimeField(default=timezone.now)
-    
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = UsuarioManager()
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nome', 'data_nascimento', 'telefone']
+    REQUIRED_FIELDS = ['nome', 'data_nascimento', 'telefone']  # Keep CPF out for now
 
     def send_confirmation_email(self, request):
         token = default_token_generator.make_token(self)
         uid = urlsafe_base64_encode(force_bytes(self.pk))
-        
-        confirmation_url = request.build_absolute_uri(
-            reverse('confirmar_email', kwargs={'uidb64': uid, 'token': token})
-        )
-        
-        subject = "Confirme seu cadastro no EclesIPay"
-        message = f"""
-        Olá {self.nome},
-        
-        Por favor, confirme seu endereço de email clicando no link abaixo:
-        {confirmation_url}
-        
-        Atenciosamente,
-        Equipe EclesIPay
-        """
-        html_message = f"""
-        <h2 style="color: #4B0082;">Confirmação de Email</h2>
-        <p>Olá {self.nome},</p>
-        <p>Clique no botão abaixo para confirmar seu endereço de email:</p>
-        <a href="{confirmation_url}" style="
-            background: #D4AF37;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 5px;
-            text-decoration: none;
-            display: inline-block;
-            margin: 15px 0;">
-            Confirmar Email
-        </a>
-        <p>Se você não criou esta conta, por favor ignore este email.</p>
-        """
-        
+        url = reverse('confirmar_email', kwargs={'uidb64': uid, 'token': token})
+        full_url = request.build_absolute_uri(url)
+        message = render_to_string('email_confirmation.html', {
+            'user': self,
+            'url': full_url,
+        })
         send_mail(
-            subject,
+            'Confirme seu email',
             message,
-            settings.DEFAULT_FROM_EMAIL,
+            'noreply@eclesipay.com',
             [self.email],
-            html_message=html_message
+            fail_silently=False,
         )
 
     def __str__(self):
