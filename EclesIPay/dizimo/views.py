@@ -19,8 +19,9 @@ from .pix_service import PixService
 from .abacatepay_service import AbacatePayService
 import requests
 from collections import defaultdict
-from datetime import datetime
-
+from datetime import datetime, date
+from django.db.models import  Sum, Count,Q
+from collections import defaultdict
 
 
 User = get_user_model()
@@ -244,29 +245,106 @@ def add_paroquia(request):
 @user_passes_test(lambda u: u.is_superuser)
 def admin_contribuicoes(request):
     try:
+        # API Configuration
         url = "https://api.abacatepay.com/v1/billing/list"
-        headers = {
-            "accept": "application/json",
-            "authorization": "Bearer abc_dev_H5Dmsa4USJkDLJCFcZafpZfW"
-        }
-        response = requests.get(url, headers=headers)
+        headers = {"accept": "application/json", "authorization": "Bearer abc_dev_H5Dmsa4USJkDLJCFcZafpZfW"}
+        
+        # Initialize API Query Parameters
+        params = {}
+        
+        # 1. PARISH FILTER
+        selected_paroquia = request.GET.get('paroquia')
+        if selected_paroquia:
+            params['product.externalId'] = selected_paroquia  # Assuming API supports this param
+        
+        # 2. DATE RANGE FILTER
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        if start_date:
+            params['createdAt[gte]'] = f"{start_date}T00:00:00Z"  # Format for API
+        if end_date:
+            params['createdAt[lte]'] = f"{end_date}T23:59:59Z"
+        
+        # 3. AMOUNT FILTER
+        amount_filter = request.GET.get('amount')
+        if amount_filter:
+            if amount_filter == '<50':
+                params['amount[lte]'] = 50 * 100  # Convert to cents
+            elif amount_filter == '50-200':
+                params['amount[gte]'] = 50 * 100
+                params['amount[lte]'] = 200 * 100
+            elif amount_filter == '>200':
+                params['amount[gte]'] = 200 * 100
+        
+        # Fetch filtered contributions from AbacatePay API
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-
         contributions = response.json().get('data', [])
+        
+        # 4. AGE GROUP FILTER (Client-Side)
+        age_group = request.GET.get('age_group')
+        if age_group:
+            # Extract emails from contributions
+            user_emails = list(set(
+                contrib.get('customer', {}).get('metadata', {}).get('email') 
+                for contrib in contributions
+                if contrib.get('customer', {}).get('metadata', {}).get('email')
+            ))
+            
+            # Fetch users' birthdates from local DB
+            users = User.objects.filter(email__in=user_emails).only('email', 'data_nascimento')
+            email_to_birthdate = {user.email: user.data_nascimento for user in users}
+            
+            # Filter contributions by age
+            filtered_contributions = []
+            today = date.today()
+            
+            for contrib in contributions:
+                email = contrib.get('customer', {}).get('metadata', {}).get('email')
+                birthdate = email_to_birthdate.get(email)
+                if not birthdate:
+                    continue  # Skip if no birthdate
+                
+                # Calculate age
+                age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
+                
+                # Apply filter
+                if age_group == '<20' and age < 20:
+                    filtered_contributions.append(contrib)
+                elif age_group == '20-40' and 20 <= age <= 40:
+                    filtered_contributions.append(contrib)
+                elif age_group == '40-60' and 40 < age <= 60:
+                    filtered_contributions.append(contrib)
+                elif age_group == '>60' and age > 60:
+                    filtered_contributions.append(contrib)
+            
+            contributions = filtered_contributions
+        
+        # Aggregate results
         totals_by_paroquia = defaultdict(lambda: {'total': 0, 'count': 0})
-        for contribution in contributions:
-            if contribution.get('status') == 'PAID':
-                amount = contribution.get('amount', 0) / 100
-                parish_id = contribution.get('products', [{}])[0].get('externalId')
-                paroquia_obj = Paroquia.objects.filter(id=parish_id).first()
-                parish_name = paroquia_obj.nome if paroquia_obj else 'Não informada'
+        for contrib in contributions:
+            if contrib.get('status') == 'PAID':
+                amount = contrib.get('amount', 0) / 100
+                parish_id = contrib.get('products', [{}])[0].get('externalId')
+                parish = Paroquia.objects.filter(id=parish_id).first()
+                parish_name = parish.nome if parish else 'Não informada'
+                
                 totals_by_paroquia[parish_name]['total'] += amount
                 totals_by_paroquia[parish_name]['count'] += 1
+        
         overall_count = sum(data['count'] for data in totals_by_paroquia.values())
-    except Exception as e:
-        messages.error(request, f'Erro ao buscar contribuições: {str(e)}')
+        
+        return render(request, 'admin_contribuicoes.html', {
+            'totals_by_paroquia': dict(totals_by_paroquia),
+            'overall_count': overall_count,
+            'all_paroquias': Paroquia.objects.all(),
+            'selected_paroquia': selected_paroquia,
+            'age_group': age_group,
+            'amount': amount_filter,
+            'start_date': start_date,
+            'end_date': end_date
+        })
+    
+    except requests.exceptions.RequestException as e:
+        messages.error(request, f'API Error: {str(e)}')
         return redirect('home')
-    return render(request, 'admin_contribuicoes.html', {
-        'totals_by_paroquia': dict(totals_by_paroquia),
-        'overall_count': overall_count
-    })
