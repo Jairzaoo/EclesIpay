@@ -2,8 +2,8 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
-from .forms import RegistroForm, EditarPerfilForm
-from django.contrib.auth.decorators import login_required
+from .forms import RegistroForm, EditarPerfilForm, ParoquiaForm
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse, JsonResponse
@@ -20,6 +20,8 @@ from .abacatepay_service import AbacatePayService
 import requests
 from collections import defaultdict
 from datetime import datetime
+
+
 
 User = get_user_model()
 
@@ -226,3 +228,45 @@ def historico_contribuicao(request):
         messages.error(request, f'Erro inesperado: {str(e)}')
     
     return redirect('home')
+
+@user_passes_test(lambda u: u.is_superuser)
+def add_paroquia(request):
+    if request.method == 'POST':
+        form = ParoquiaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('paroquia-list')
+    else:
+        form = ParoquiaForm()
+    
+    return render(request, 'admin/add_paroquia.html', {'form': form})
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_contribuicoes(request):
+    try:
+        url = "https://api.abacatepay.com/v1/billing/list"
+        headers = {
+            "accept": "application/json",
+            "authorization": "Bearer abc_dev_H5Dmsa4USJkDLJCFcZafpZfW"
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        contributions = response.json().get('data', [])
+        totals_by_paroquia = defaultdict(lambda: {'total': 0, 'count': 0})
+        for contribution in contributions:
+            if contribution.get('status') == 'PAID':
+                amount = contribution.get('amount', 0) / 100
+                parish_id = contribution.get('products', [{}])[0].get('externalId')
+                paroquia_obj = Paroquia.objects.filter(id=parish_id).first()
+                parish_name = paroquia_obj.nome if paroquia_obj else 'Não informada'
+                totals_by_paroquia[parish_name]['total'] += amount
+                totals_by_paroquia[parish_name]['count'] += 1
+        overall_count = sum(data['count'] for data in totals_by_paroquia.values())
+    except Exception as e:
+        messages.error(request, f'Erro ao buscar contribuições: {str(e)}')
+        return redirect('home')
+    return render(request, 'admin_contribuicoes.html', {
+        'totals_by_paroquia': dict(totals_by_paroquia),
+        'overall_count': overall_count
+    })

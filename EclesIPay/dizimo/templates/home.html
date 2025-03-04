@@ -113,6 +113,11 @@
                     <a href="{% url 'editar_perfil' %}" class="action-button">
                         <i class="fas fa-user-edit"></i> Editar Perfil
                     </a>
+                    {% if request.user.is_superuser %}
+                    <a href="{% url 'admin_contribuicoes' %}" class="action-button">
+                        <i class="fas fa-chart-bar"></i> Contribuições Totais
+                    </a>
+                    {% endif %}
                     <a href="{% url 'logout' %}" class="action-button logout-btn">
                         <i class="fas fa-sign-out-alt"></i> Sair
                     </a>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Admin Dashboard</title>
+    <!-- ...existing head code... -->
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h2>Adicionar Paróquia</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="nome" placeholder="Nome da Paróquia" required>
+        <button type="submit">Adicionar</button>
+    </form>
+
+    <h2>Lista de Paróquias</h2>
+    <ul>
+        {% for paroquia in paroquias %}
+            <li>{{ paroquia.nome }}</li>
+        {% empty %}
+            <li>Nenhuma paróquia cadastrada.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

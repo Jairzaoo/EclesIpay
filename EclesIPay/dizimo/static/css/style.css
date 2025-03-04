@@ -1123,10 +1123,6 @@ h1 {
     color: var(--secondary-color);
 }
 
-
-
-
-
 .header-back .back-arrow {
     position: relative;
     z-index: 9999;
@@ -1141,4 +1137,40 @@ h1 {
 
 .header-back .back-arrow:hover {
     color: var(--secondary-color);
+}
+
+/* Additional styles for the Admin Contribuições page to resemble histórico_contribuição */
+.admin-contribuicoes {
+    padding: 2rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 2rem auto;
+    max-width: 1000px;
+}
+
+.admin-contribuicoes table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.admin-contribuicoes th,
+.admin-contribuicoes td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.admin-contribuicoes th {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.admin-contribuicoes tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.admin-contribuicoes tr:hover {
+    background: #f1f1f1;
 }

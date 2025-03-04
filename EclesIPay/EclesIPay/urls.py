@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from dizimo import views
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.CustomLoginView.as_view(), name='login'),  # Use the custom login view
@@ -16,5 +17,7 @@ urlpatterns = [
     path('editar-perfil/', views.editar_perfil, name='editar_perfil'),  # Add the edit profile view
     path('fazer-oferta/', views.fazer_oferta, name='fazer_oferta'),  # Add the make offer view
     path('pagamentoefetuado/', views.pagamento_efetuado, name='pagamentoefetuado'),  # Add the make offer view
-    path('historico-contribuicao/', views.historico_contribuicao, name='historico_contribuicao'),  # Add the historico contribuicao view
+    path('historico-contribuicao/', views.historico_contribuicao, name='historico_contribuicao'),
+    path('admin-contribuicoes/', views.admin_contribuicoes, name='admin_contribuicoes'),
+    
 ]

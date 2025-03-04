@@ -17,3 +17,11 @@ class EditarPerfilForm(forms.ModelForm):
     class Meta:
         model = Usuario
         fields = ['nome', 'telefone', 'data_nascimento', 'cpf']
+
+class ParoquiaForm(forms.ModelForm):
+    class Meta:
+        model = Paroquia
+        fields = ['nome']  # Include all fields you want to edit
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'})
+        }

@@ -21,5 +21,19 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
 
+
+class ParoquiaAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+admin.site.register(Paroquia, ParoquiaAdmin)
 admin.site.register(Usuario, CustomUserAdmin)
-admin.site.register(Paroquia)
+admin.site.site_header = "EclesIPay Administração"
+admin.site.site_title = "Portal EclesIPay"
+admin.site.index_title = "Bem-vindo ao Portal EclesIPay"
