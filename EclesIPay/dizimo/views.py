@@ -15,13 +15,13 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.views import LoginView
 from django.views import View
-from .pix_service import PixService
 from .abacatepay_service import AbacatePayService
 import requests
 from collections import defaultdict
 from datetime import datetime, date
 from django.db.models import  Sum, Count,Q
 from collections import defaultdict
+from decouple import config
 
 
 User = get_user_model()
@@ -135,7 +135,8 @@ def fazer_oferta(request):
         payer_telefone = request.user.telefone
         paroquia = request.user.paroquia
 
-        abacatepay_service = AbacatePayService(api_key='abc_dev_H5Dmsa4USJkDLJCFcZafpZfW')
+        # Use API key from .env instead of hardcoded value
+        abacatepay_service = AbacatePayService(api_key=config('ABACATEPAY_API_KEY'))
         payment_response = abacatepay_service.create_payment(
             amount=int(float(value) * 100),  
             payer_name=payer_name,
@@ -166,7 +167,7 @@ def historico_contribuicao(request):
         url = "https://api.abacatepay.com/v1/billing/list"
         headers = {
             "accept": "application/json",
-            "authorization": "Bearer abc_dev_H5Dmsa4USJkDLJCFcZafpZfW"
+            "authorization": f"Bearer {os.environ.get('ABACATEPAY_API_KEY')}"
         }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -247,7 +248,7 @@ def admin_contribuicoes(request):
     try:
         # API Configuration
         url = "https://api.abacatepay.com/v1/billing/list"
-        headers = {"accept": "application/json", "authorization": "Bearer abc_dev_H5Dmsa4USJkDLJCFcZafpZfW"}
+        headers = {"accept": "application/json", "authorization": f"Bearer {config('ABACATEPAY_API_KEY')}"}
         
         # Initialize API Query Parameters
         params = {}

@@ -26,7 +26,7 @@ class AbacatePayService:
             ],
             "returnUrl": "http://eclesipay.run.place/fazer-oferta/",
             "completionUrl": "http://eclesipay.run.place/pagamentoefetuado/",
-            #"webhook": "webh_dev_B6ArZrLxKMSfdgcDenHcKJ05",
+            
             "customer": {
                 "name": payer_name,
                 "cellphone": payer_telefone,
