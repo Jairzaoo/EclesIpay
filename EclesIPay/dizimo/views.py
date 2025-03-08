@@ -167,7 +167,7 @@ def historico_contribuicao(request):
         url = "https://api.abacatepay.com/v1/billing/list"
         headers = {
             "accept": "application/json",
-            "authorization": f"Bearer {os.environ.get('ABACATEPAY_API_KEY')}"
+            "authorization": f"Bearer {config('ABACATEPAY_API_KEY')}"
         }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
