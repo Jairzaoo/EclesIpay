@@ -26,7 +26,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'eclesipay.run.place','47.84.33.85']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'eclesipay.run.place','www.eclesipay.run.place','47.84.33.85']
 
 LOGIN_REDIRECT_URL = 'home'
 # Application definition
