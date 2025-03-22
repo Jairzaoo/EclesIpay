@@ -32,15 +32,15 @@
                                     <label class="form-label">Paróquia</label>
                                     <select class="form-select" name="paroquia">
                                         <option value="">Todas</option>
-                                        {% for p in all_paroquias %}
-                                        <option value="{{ p.id }}" {% if p.id|stringformat:"s" == selected_paroquia %}selected{% endif %}>
-                                            {{ p.nome }}
+                                        {% for name in all_paroquias %}
+                                        <option value="{{ name }}" {% if name == selected_paroquia %}selected{% endif %}>
+                                            {{ name }}
                                         </option>
                                         {% endfor %}
                                     </select>
                                 </div>
 
-                                <!-- Age Group Filter -->
+                                <!-- Age Group Filter 
                                 <div class="col-md-3">
                                     <label class="form-label">Faixa Etária</label>
                                     <select class="form-select" name="age_group">
@@ -51,7 +51,8 @@
                                         <option value=">60" {% if age_group == '>60' %}selected{% endif %}>Mais de 60 anos</option>
                                     </select>
                                 </div>
-
+                                -->
+                                
                                 <!-- Contribution Amount -->
                                 <div class="col-md-3">
                                     <label class="form-label">Valor</label>
