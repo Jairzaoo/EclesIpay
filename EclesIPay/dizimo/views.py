@@ -246,57 +246,50 @@ def add_paroquia(request):
 @user_passes_test(lambda u: u.is_superuser)
 def admin_contribuicoes(request):
     try:
-        # API Configuration
         url = "https://api.abacatepay.com/v1/billing/list"
         headers = {"accept": "application/json", "authorization": f"Bearer {config('ABACATEPAY_API_KEY')}"}
-        
-        # Initialize API Query Parameters
         params = {}
         
         # 1. PARISH FILTER
-        selected_paroquia = request.GET.get('paroquia')
-        if selected_paroquia:
-            params['product.externalId'] = selected_paroquia  # Assuming API supports this param
+        selected_paroquia_name = request.GET.get('paroquia')
+        parish_filter = None
         
-        # 2. DATE RANGE FILTER
+        if selected_paroquia_name:
+            parish_filter = Paroquia.objects.filter(nome=selected_paroquia_name).first()
+            if parish_filter:
+                params['products[0].externalId'] = parish_filter.id
+
+        # 2. TODO: DATE FILTER
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         if start_date:
-            params['createdAt[gte]'] = f"{start_date}T00:00:00Z"  # Format for API
+            params['createdAt.gte'] = f"{start_date}T00:00:00Z"
         if end_date:
-            params['createdAt[lte]'] = f"{end_date}T23:59:59Z"
-        
+            params['createdAt.lte'] = f"{end_date}T23:59:59Z"
+
         # 3. AMOUNT FILTER
         amount_filter = request.GET.get('amount')
         if amount_filter:
             if amount_filter == '<50':
-                params['amount[lte]'] = 50 * 100  # Convert to cents
+                params['amount.lte'] = 50  # Now in Reais
             elif amount_filter == '50-200':
-                params['amount[gte]'] = 50 * 100
-                params['amount[lte]'] = 200 * 100
+                params['amount.gte'] = 50
+                params['amount.lte'] = 200
             elif amount_filter == '>200':
-                params['amount[gte]'] = 200 * 100
-        
-        # Fetch filtered contributions from AbacatePay API
+                params['amount.gte'] = 200
+
+        # API Call
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         contributions = response.json().get('data', [])
-        
-        # 4. AGE GROUP FILTER (Client-Side)
+
+        # 4. AGE GROUP FILTER
         age_group = request.GET.get('age_group')
         if age_group:
-            # Extract emails from contributions
-            user_emails = list(set(
-                contrib.get('customer', {}).get('metadata', {}).get('email') 
-                for contrib in contributions
-                if contrib.get('customer', {}).get('metadata', {}).get('email')
-            ))
-            
-            # Fetch users' birthdates from local DB
+            user_emails = {c.get('customer', {}).get('metadata', {}).get('email') for c in contributions}
             users = User.objects.filter(email__in=user_emails).only('email', 'data_nascimento')
             email_to_birthdate = {user.email: user.data_nascimento for user in users}
             
-            # Filter contributions by age
             filtered_contributions = []
             today = date.today()
             
@@ -304,48 +297,54 @@ def admin_contribuicoes(request):
                 email = contrib.get('customer', {}).get('metadata', {}).get('email')
                 birthdate = email_to_birthdate.get(email)
                 if not birthdate:
-                    continue  # Skip if no birthdate
+                    continue
                 
-                # Calculate age
                 age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
                 
-                # Apply filter
-                if age_group == '<20' and age < 20:
-                    filtered_contributions.append(contrib)
-                elif age_group == '20-40' and 20 <= age <= 40:
-                    filtered_contributions.append(contrib)
-                elif age_group == '40-60' and 40 < age <= 60:
-                    filtered_contributions.append(contrib)
-                elif age_group == '>60' and age > 60:
+                if ((age_group == '<20' and age < 20) or
+                    (age_group == '20-40' and 20 <= age <= 40) or
+                    (age_group == '40-60' and 40 < age <= 60) or
+                    (age_group == '>60' and age > 60)):
                     filtered_contributions.append(contrib)
             
             contributions = filtered_contributions
-        
-        # Aggregate results
+
+        # Process contributions
         totals_by_paroquia = defaultdict(lambda: {'total': 0, 'count': 0})
         for contrib in contributions:
             if contrib.get('status') == 'PAID':
-                amount = contrib.get('amount', 0) / 100
                 parish_id = contrib.get('products', [{}])[0].get('externalId')
                 parish = Paroquia.objects.filter(id=parish_id).first()
-                parish_name = parish.nome if parish else 'Não informada'
                 
-                totals_by_paroquia[parish_name]['total'] += amount
-                totals_by_paroquia[parish_name]['count'] += 1
-        
+                amount = contrib.get('amount', 0) / 100  # Convert to Reais
+                
+                # If parish filter is active
+                if parish_filter:
+                    if parish and parish.id == parish_filter.id:
+                        parish_name = parish.nome
+                        totals_by_paroquia[parish_name]['total'] += amount
+                        totals_by_paroquia[parish_name]['count'] += 1
+                else:
+                    parish_name = parish.nome if parish else 'Não informada'
+                    totals_by_paroquia[parish_name]['total'] += amount
+                    totals_by_paroquia[parish_name]['count'] += 1
+
         overall_count = sum(data['count'] for data in totals_by_paroquia.values())
-        
+
         return render(request, 'admin_contribuicoes.html', {
             'totals_by_paroquia': dict(totals_by_paroquia),
             'overall_count': overall_count,
-            'all_paroquias': Paroquia.objects.all(),
-            'selected_paroquia': selected_paroquia,
+            'all_paroquias': Paroquia.objects.values_list('nome', flat=True).distinct(),
+            'selected_paroquia': selected_paroquia_name,
             'age_group': age_group,
             'amount': amount_filter,
             'start_date': start_date,
             'end_date': end_date
         })
-    
+
     except requests.exceptions.RequestException as e:
-        messages.error(request, f'API Error: {str(e)}')
-        return redirect('home')
+        messages.error(request, f'Erro na API: {str(e)}')
+    except Exception as e:
+        messages.error(request, f'Erro inesperado: {str(e)}')
+    
+    return redirect('home')
