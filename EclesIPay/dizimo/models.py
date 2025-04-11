@@ -71,3 +71,39 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.nome} ({self.email})"
+
+class EmailLog(models.Model):
+    """Model to track email sending history"""
+    EMAIL_TYPES = (
+        ('monthly', 'Lembrete Mensal'),
+        ('confirmation', 'Confirmação de Email'),
+        ('password_reset', 'Redefinição de Senha'),
+        ('other', 'Outro'),
+    )
+
+    user = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='email_logs')
+    email_type = models.CharField(max_length=20, choices=EMAIL_TYPES)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    subject = models.CharField(max_length=255)
+    successful = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Log de Email'
+        verbose_name_plural = 'Logs de Email'
+        ordering = ['-sent_at']
+
+    def __str__(self):
+        return f"{self.email_type} para {self.user.email} em {self.sent_at.strftime('%d/%m/%Y %H:%M')}"
+
+    @classmethod
+    def has_received_monthly_email_this_month(cls, user):
+        """Check if the user has already received a monthly email this month"""
+        now = timezone.now()
+        first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return cls.objects.filter(
+            user=user,
+            email_type='monthly',
+            sent_at__gte=first_day_of_month,
+            successful=True
+        ).exists()
