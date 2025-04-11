@@ -84,19 +84,19 @@ def atualizar_paroquia(request):
         try:
             data = json.loads(request.body)
             paroquia_id = data.get('paroquia_id')
-            
+
             if not paroquia_id:
                 return JsonResponse({'status': 'error', 'message': 'ID da paróquia não fornecido'})
-            
+
             paroquia = Paroquia.objects.get(id=paroquia_id)
             request.user.paroquia = paroquia
             request.user.save()
-            
+
             return JsonResponse({
                 'status': 'success',
                 'paroquia_nome': paroquia.nome
             })
-            
+
         except Paroquia.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Paróquia não encontrada'})
         except Exception as e:
@@ -135,10 +135,10 @@ def fazer_oferta(request):
         payer_telefone = request.user.telefone
         paroquia = request.user.paroquia
 
-        # Use API key from .env instead of hardcoded value
+        
         abacatepay_service = AbacatePayService(api_key=config('ABACATEPAY_API_KEY'))
         payment_response = abacatepay_service.create_payment(
-            amount=int(float(value) * 100),  
+            amount=int(float(value) * 100),
             payer_name=payer_name,
             payer_cpf=payer_cpf,
             payer_email=payer_email,
@@ -153,7 +153,7 @@ def fazer_oferta(request):
         else:
             error_message = payment_response.get('error') or 'Erro desconhecido na API'
             messages.error(request, f'Erro ao gerar cobrança: {error_message}')
-        
+
     return render(request, 'fazer_oferta.html')
 
 @login_required
@@ -174,24 +174,24 @@ def historico_contribuicao(request):
 
         contributions = response.json().get('data', [])
         user_email = request.user.email
-        
+
         paid_contributions = []
         total_amount = 0
         parishes = defaultdict(lambda: {'total': 0, 'count': 0})
 
         for contribution in contributions:
             customer_data = contribution.get('customer', {}).get('metadata', {})
-            
+
             if customer_data.get('email') == user_email and contribution.get('status') == 'PAID':
                 amount = contribution.get('amount', 0) / 100
                 created_at = datetime.strptime(
-                    contribution['createdAt'], 
+                    contribution['createdAt'],
                     '%Y-%m-%dT%H:%M:%S.%fZ'
                 )
                 parish_id = contribution.get('products', [{}])[0].get('externalId')
                 parish = Paroquia.objects.filter(id=parish_id).first()
                 parish_name = parish.nome if parish else 'Não informada'
-                
+
                 paid_contributions.append({
                     'date': created_at,
                     'amount': amount,
@@ -200,7 +200,7 @@ def historico_contribuicao(request):
                     'payment_url': contribution.get('url', ''),
                     'id': contribution.get('id', '')
                 })
-                
+
                 total_amount += amount
                 parishes[parish_name]['total'] += amount
                 parishes[parish_name]['count'] += 1
@@ -228,7 +228,7 @@ def historico_contribuicao(request):
         messages.error(request, f'Erro ao conectar com o serviço de pagamentos: {str(e)}')
     except Exception as e:
         messages.error(request, f'Erro inesperado: {str(e)}')
-    
+
     return redirect('home')
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -240,7 +240,7 @@ def add_paroquia(request):
             return redirect('paroquia-list')
     else:
         form = ParoquiaForm()
-    
+
     return render(request, 'admin/add_paroquia.html', {'form': form})
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -249,39 +249,75 @@ def admin_contribuicoes(request):
         url = "https://api.abacatepay.com/v1/billing/list"
         headers = {"accept": "application/json", "authorization": f"Bearer {config('ABACATEPAY_API_KEY')}"}
         params = {}
+
         
-        # 1. PARISH FILTER
         selected_paroquia_name = request.GET.get('paroquia')
         parish_filter = None
-        
+
         if selected_paroquia_name:
             parish_filter = Paroquia.objects.filter(nome=selected_paroquia_name).first()
             if parish_filter:
                 params['products[0].externalId'] = parish_filter.id
 
-        # 2. TODO: DATE FILTER
+        
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
+
+       
+        print(f"Date filter - start_date: {start_date}, end_date: {end_date}")
+
+        
         if start_date:
-            params['createdAt.gte'] = f"{start_date}T00:00:00Z"
+            
+            params['createdAt.gte'] = start_date
+
+            print(f"Using start date parameter: {params['createdAt.gte']}")
+
         if end_date:
-            params['createdAt.lte'] = f"{end_date}T23:59:59Z"
+            # Approach 3: Date only for end date too
+            params['createdAt.lte'] = end_date
+            print(f"Using end date parameter: {params['createdAt.lte']}")
 
         # 3. AMOUNT FILTER
         amount_filter = request.GET.get('amount')
+        print(f"Amount filter: {amount_filter}")
+
         if amount_filter:
+            
             if amount_filter == '<50':
-                params['amount.lte'] = 50  # Now in Reais
+                params['amount.lte'] = 5000  # Convert to cents (API might expect cents)
+                print(f"Setting API amount filter: amount.lte={params['amount.lte']}")
             elif amount_filter == '50-200':
-                params['amount.gte'] = 50
-                params['amount.lte'] = 200
+                params['amount.gte'] = 5000  # Convert to cents
+                params['amount.lte'] = 20000  # Convert to cents
+                print(f"Setting API amount filter: amount.gte={params['amount.gte']}, amount.lte={params['amount.lte']}")
             elif amount_filter == '>200':
-                params['amount.gte'] = 200
+                params['amount.gte'] = 20000  # Convert to cents
+                print(f"Setting API amount filter: amount.gte={params['amount.gte']}")
+
+        
+        print(f"API request parameters: {params}")
+        print(f"API URL: {url}")
+        print(f"API Headers: {headers}")
 
         # API Call
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        contributions = response.json().get('data', [])
+
+        # Get response data
+        api_response = response.json()
+        contributions = api_response.get('data', [])
+
+        # Debug print to show API response
+        print(f"API response status: {response.status_code}")
+        print(f"Number of contributions returned: {len(contributions)}")
+
+        # Print the first contribution to see its structure
+        if contributions:
+            print(f"First contribution date: {contributions[0].get('createdAt')}")
+            print(f"Sample contribution: {contributions[0]}")
+        else:
+            print("No contributions returned")
 
         # 4. AGE GROUP FILTER
         age_group = request.GET.get('age_group')
@@ -289,24 +325,76 @@ def admin_contribuicoes(request):
             user_emails = {c.get('customer', {}).get('metadata', {}).get('email') for c in contributions}
             users = User.objects.filter(email__in=user_emails).only('email', 'data_nascimento')
             email_to_birthdate = {user.email: user.data_nascimento for user in users}
-            
-            filtered_contributions = []
+
+            age_filtered_contributions = []
             today = date.today()
-            
+
             for contrib in contributions:
                 email = contrib.get('customer', {}).get('metadata', {}).get('email')
                 birthdate = email_to_birthdate.get(email)
                 if not birthdate:
                     continue
-                
+
                 age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
-                
+
                 if ((age_group == '<20' and age < 20) or
                     (age_group == '20-40' and 20 <= age <= 40) or
                     (age_group == '40-60' and 40 < age <= 60) or
                     (age_group == '>60' and age > 60)):
+                    age_filtered_contributions.append(contrib)
+
+            print(f"Age filtering: {len(contributions)} -> {len(age_filtered_contributions)}")
+            contributions = age_filtered_contributions
+
+        # Manual date filtering in case API filtering doesn't work
+        if start_date or end_date:
+            print("Applying manual date filtering...")
+            filtered_contributions = []
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d') if end_date else None
+
+            for contrib in contributions:
+                created_at_str = contrib.get('createdAt')
+                if not created_at_str:
+                    continue
+
+                try:
+                    # Parse the API date format
+                    created_at = datetime.strptime(created_at_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+                    # Apply date filters
+                    if start_date_obj and created_at < start_date_obj:
+                        continue
+                    if end_date_obj and created_at > end_date_obj.replace(hour=23, minute=59, second=59):
+                        continue
+
                     filtered_contributions.append(contrib)
-            
+                except ValueError as e:
+                    print(f"Error parsing date {created_at_str}: {e}")
+
+            print(f"Manual date filtering: {len(contributions)} -> {len(filtered_contributions)}")
+            contributions = filtered_contributions
+
+        # Manual amount filtering in case API filtering doesn't work
+        if amount_filter:
+            print("Applying manual amount filtering...")
+            filtered_contributions = []
+
+            for contrib in contributions:
+                amount_cents = contrib.get('amount', 0)  # Amount in cents
+                amount_reais = amount_cents / 100  # Convert to Reais
+
+                # Apply amount filters
+                if amount_filter == '<50' and amount_reais <= 50:
+                    filtered_contributions.append(contrib)
+                elif amount_filter == '50-200' and 50 <= amount_reais <= 200:
+                    filtered_contributions.append(contrib)
+                elif amount_filter == '>200' and amount_reais > 200:
+                    filtered_contributions.append(contrib)
+                elif not amount_filter:  # No filter, include all
+                    filtered_contributions.append(contrib)
+
+            print(f"Manual amount filtering: {len(contributions)} -> {len(filtered_contributions)}")
             contributions = filtered_contributions
 
         # Process contributions
@@ -315,9 +403,9 @@ def admin_contribuicoes(request):
             if contrib.get('status') == 'PAID':
                 parish_id = contrib.get('products', [{}])[0].get('externalId')
                 parish = Paroquia.objects.filter(id=parish_id).first()
-                
+
                 amount = contrib.get('amount', 0) / 100  # Convert to Reais
-                
+
                 # If parish filter is active
                 if parish_filter:
                     if parish and parish.id == parish_filter.id:
@@ -346,5 +434,5 @@ def admin_contribuicoes(request):
         messages.error(request, f'Erro na API: {str(e)}')
     except Exception as e:
         messages.error(request, f'Erro inesperado: {str(e)}')
-    
+
     return redirect('home')
