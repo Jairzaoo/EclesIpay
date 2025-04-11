@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lembrete Mensal - EclesIPay</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-width: 150px;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>EclesIPay</h1>
+    </div>
+    
+    <div class="content">
+        <h2>Olá, {{ user.first_name }}!</h2>
+        
+        <p>Esperamos que esteja tudo bem com você. Este é um lembrete mensal da sua conta no EclesIPay.</p>
+        
+        <p>Sua contribuição é fundamental para a manutenção e desenvolvimento dos trabalhos da igreja. Agradecemos por fazer parte desta comunidade.</p>
+        
+        {% if last_contribution %}
+        <p>Sua última contribuição foi de <strong>R$ {{ last_contribution.amount|floatformat:2 }}</strong> em <strong>{{ last_contribution.date|date:"d/m/Y" }}</strong>.</p>
+        {% else %}
+        <p>Ainda não registramos nenhuma contribuição sua. Que tal fazer sua primeira contribuição hoje?</p>
+        {% endif %}
+        
+        <p>Para fazer uma nova contribuição ou verificar seu histórico, clique no botão abaixo:</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ site_url }}/fazer-oferta/" class="button">Fazer Contribuição</a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Este é um email automático. Por favor, não responda a este email.</p>
+        <p>Se você não deseja mais receber estes emails, <a href="{{ site_url }}/perfil/">atualize suas preferências</a>.</p>
+        <p>&copy; {% now "Y" %} EclesIPay. Todos os direitos reservados.</p>
+    </div>
+</body>
+</html>
