@@ -40,7 +40,7 @@
                                     </select>
                                 </div>
 
-                                <!-- Age Group Filter 
+                                <!-- Age Group Filter
                                 <div class="col-md-3">
                                     <label class="form-label">Faixa Etária</label>
                                     <select class="form-select" name="age_group">
@@ -52,7 +52,7 @@
                                     </select>
                                 </div>
                                 -->
-                                
+
                                 <!-- Contribution Amount -->
                                 <div class="col-md-3">
                                     <label class="form-label">Valor</label>
@@ -68,8 +68,8 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Período</label>
                                     <div class="input-group">
-                                        <input type="date" class="form-control" name="start_date" value="{{ start_date }}" placeholder="Início">
-                                        <input type="date" class="form-control" name="end_date" value="{{ end_date }}" placeholder="Fim">
+                                        <input type="date" class="form-control" name="start_date" value="{{ start_date }}" placeholder="Início" id="start_date">
+                                        <input type="date" class="form-control" name="end_date" value="{{ end_date }}" placeholder="Fim" id="end_date">
                                     </div>
                                 </div>
                             </div>
@@ -97,7 +97,7 @@
                 <div class="card shadow">
                     <div class="card-body">
                         <h5 class="card-title">Total de Contribuições</h5>
-                        <h2 class="card-text">{{ overall_count }}</h2>
+                        <h2 class="card-text">{{ overall_count|floatformat:0 }}</h2>
                     </div>
                 </div>
             </div>
@@ -132,7 +132,7 @@
                                     <tr>
                                         <td>{{ paroquia }}</td>
                                         <td>R$ {{ data.total|floatformat:2 }}</td>
-                                        <td>{{ data.count }}</td>
+                                        <td>{{ data.count|floatformat:0 }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -147,7 +147,7 @@
             // Chart Initialization
             const ctx = document.getElementById('contribuicoesChart').getContext('2d');
             const paroquiasData = {{ totals_by_paroquia|safe }};
-            
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -159,7 +159,7 @@
                         borderWidth: 0
                     }, {
                         label: 'Quantidade',
-                        data: Object.values(paroquiasData).map(d => d.count),
+                        data: Object.values(paroquiasData).map(d => Math.round(d.count)),
                         backgroundColor: 'rgba(255, 99, 132, 0.7)',
                         borderWidth: 0
                     }]
@@ -167,16 +167,17 @@
                 options: {
                     responsive: true,
                     scales: {
-                        y: { 
-                            type: 'linear', 
+                        y: {
+                            type: 'linear',
                             position: 'left',
                             title: { display: true, text: 'Valor (R$)' }
                         },
-                        y1: { 
-                            type: 'linear', 
+                        y1: {
+                            type: 'linear',
                             position: 'right',
                             title: { display: true, text: 'Quantidade' },
-                            grid: { drawOnChartArea: false }
+                            grid: { drawOnChartArea: false },
+                            ticks: { precision: 0 }
                         }
                     }
                 }
@@ -197,6 +198,53 @@
             document.getElementById('filterForm').reset();
             window.location.href = window.location.pathname; // Remove query params
         }
+
+        // Date filter handling
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get date inputs
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+
+            // Add event listeners to validate date range
+            if (startDateInput && endDateInput) {
+                startDateInput.addEventListener('change', validateDateRange);
+                endDateInput.addEventListener('change', validateDateRange);
+            }
+
+            // Function to validate date range
+            function validateDateRange() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                // If both dates are set, ensure end date is not before start date
+                if (startDate && endDate && startDate > endDate) {
+                    alert('A data final não pode ser anterior à data inicial.');
+                    endDateInput.value = startDate;
+                }
+
+                console.log('Date range updated - Start:', startDate, 'End:', endDate);
+            }
+
+            // Validate form before submission
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    // Validate date range again before submission
+                    const startDate = startDateInput.value;
+                    const endDate = endDateInput.value;
+
+                    if (startDate && endDate && startDate > endDate) {
+                        e.preventDefault();
+                        alert('A data final não pode ser anterior à data inicial.');
+                        endDateInput.value = startDate;
+                        return false;
+                    }
+
+                    console.log('Form submitted with date range - Start:', startDate, 'End:', endDate);
+                    return true;
+                });
+            }
+        });
     </script>
 </body>
 </html>
